@@ -10,11 +10,11 @@
 
 #define lco_return co_return
 #define lco_await co_await
-#define lco_background(...) ((__VA_ARGS__).detach())
+#define _lco_detached .detach()
 #else
 #define lco_return return
 #define lco_await
-#define lco_background(...) (__VA_ARGS__)
+#define _lco_detached
 #endif
 
 namespace server {

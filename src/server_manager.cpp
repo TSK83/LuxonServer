@@ -955,7 +955,7 @@ void ServerManager::setup() {
             };
 
             enetPeer->on_state_changed = [this, handler = raw_handler](enet::EnetConnectionState state) {
-                lco_background([](ServerManager& self, enet::EnetConnectionState state, server::HandlerBase *handler) -> Awaitable<> {
+                [](ServerManager& self, enet::EnetConnectionState state, server::HandlerBase *handler) -> Awaitable<> {
                     try {
                         lco_await handler->HandleENetConnectionStateChange(state);
                     } catch (const std::exception& e) {
@@ -971,12 +971,12 @@ void ServerManager::setup() {
                         // Self-destruct handler, this will invalidate the pointer
                         self.add_scheduled_task(0, [&self, handler]() { self.connections_.remove_if([handler](auto& v) { return v.get() == handler; }); });
                     }
-                }(*this, state, handler));
+                }(*this, state, handler)_lco_detached;
             };
 
 #ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
             enetPeer->on_payload_command = [this, handler_capture = std::weak_ptr<HandlerBase>(handler_ptr)](enet::EnetCommand&& cmd) {
-                lco_background([](ServerManager& self, enet::EnetCommand cmd, auto h_token) -> Awaitable<> {
+                [](ServerManager& self, enet::EnetCommand cmd, auto h_token) -> Awaitable<> {
                     auto handler = h_token.lock();
                     if (!handler)
                         lco_return;
@@ -1017,7 +1017,7 @@ void ServerManager::setup() {
                     }
                     self.active_command_restarter_.reset();
 #endif
-                }(*this, std::move(cmd), std::move(handler_capture)));
+                }(*this, std::move(cmd), std::move(handler_capture))_lco_detached;
             };
 
             // Add to connection list
