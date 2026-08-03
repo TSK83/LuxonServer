@@ -1,3 +1,17 @@
+luxon-server (1.4.1) UNRELEASED; urgency=low
+
+  * Fixed Debian package CI
+  * XZ compress rel+debinfo artifacts
+  * HTTP server: Limit payload size, inactivity, connection count and batch size
+  * Implemented FFI capable coroutines
+  * Limit each peers total incoming buffer size
+  * Fixed compilation issues with CMAKE_BUILD_TYPE=None
+  * Improved dual-stack IPv4 formatting
+  * Have binaries reproduce license banner (disable with `NoBanner: true` in config)
+
+ -- Tuxifan <tuxifan@posteo.de>  Fri, 03 Aug 2026 12:40:00 +0200
+
+
 luxon-server (1.4) UNRELEASED; urgency=low
 
   * Added Mac OS Support
