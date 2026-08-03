@@ -392,6 +392,7 @@ void HttpServer::handle_client_data(HttpClient& client) {
                                                      "Content-Type: {}\r\n"
                                                      "Content-Length: {}\r\n"
                                                      "Connection: close\r\n"
+                                                     "Server: LuxonServer (" __DATE__ " " __TIME__ ")\r\n"
                                                      "\r\n{}",
                                                      content_type, content.size(), content);
             queue_data(client, response, true);
@@ -408,6 +409,7 @@ void HttpServer::send_text_response(HttpClient& client, int status, std::string_
                                              "Content-Type: {}\r\n"
                                              "Content-Length: {}\r\n"
                                              "Connection: close\r\n"
+                                             "Server: LuxonServer (" __DATE__ " " __TIME__ ")\r\n"
                                              "\r\n{}",
                                              status, content_type, body.size(), body);
     queue_data(client, response, true);
@@ -422,6 +424,7 @@ void HttpServer::send_error(HttpClient& client, int status, std::string_view mes
                                              "Content-Type: application/json\r\n"
                                              "Content-Length: {}\r\n"
                                              "Connection: close\r\n"
+                                             "Server: LuxonServer (" __DATE__ " " __TIME__ ")\r\n"
                                              "\r\n{}",
                                              status, body_str.size(), body_str);
     queue_data(client, response, true);

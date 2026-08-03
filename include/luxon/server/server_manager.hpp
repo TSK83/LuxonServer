@@ -98,6 +98,7 @@ struct HttpServerConfig {
 struct ServerManagerConfig {
     std::vector<ServerConfig> servers;
     bool enable_ipv6 = true;
+    bool no_banner = false;
     unsigned max_connections = 0;
     ///
     /// \brief Maximum peers per game
