@@ -1024,7 +1024,7 @@ void ServerManager::setup() {
                         lco_return;
 #else
             enetPeer->on_payload_command = [this, handler_capture = handler_ptr](enet::EnetCommand&& cmd) {
-                lco_background([](ServerManager& self, enet::EnetCommand cmd, auto h_token) -> Awaitable<> {
+                [](ServerManager& self, enet::EnetCommand cmd, auto h_token) -> Awaitable<> {
                     auto *handler = h_token;
 #endif
                     auto& peer = handler->get_peer();
