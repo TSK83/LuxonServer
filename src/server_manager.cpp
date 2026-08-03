@@ -387,6 +387,8 @@ ServerManagerConfig ServerManager::parse_config(const std::string& config_conten
                 ->warn("The 'External' configuration block is deprecated and will be ignored. Please migrate to using 'proxies' within the 'Servers' block.");
         } else if (key == "EnableIPv6") {
             config.enable_ipv6 = ReadNodeScalar<bool>(section, "EnableIPv6");
+        } else if (key == "NoBanner") {
+            config.no_banner = ReadNodeScalar<bool>(section, "NoBanner");
         } else if (key == "MaxConnections" || key == "CCU") {
             config.max_connections = ReadNodeScalar<unsigned>(section, key);
         } else if (key == "MaxGamePeers") {
@@ -435,6 +437,46 @@ ServerManager::ServerManager(ServerManagerConfig config
 #ifdef LUXON_SERVER_ENABLE_VISUALIZER
     log_->set_level(log_level::trace);
 #endif
+
+    if (!config.no_banner) {
+        static bool banner_printed = false;
+        if (!banner_printed) {
+            log_->info(" ");
+            log_->info(" |===================== http://github.com/niansa/LuxonServer =====================|");
+            log_->info(" | BSD 3-Clause License                                                           |");
+            log_->info(" |                                                                                |");
+            log_->info(" | Copyright (c) 2026, the Luxon Server contributors                              |");
+            log_->info(" |                                                                                |");
+            log_->info(" | Redistribution and use in source and binary forms, with or without             |");
+            log_->info(" | modification, are permitted provided that the following conditions are met:    |");
+            log_->info(" |                                                                                |");
+            log_->info(" | 1. Redistributions of source code must retain the above copyright notice, this |");
+            log_->info(" |    list of conditions and the following disclaimer.                            |");
+            log_->info(" |                                                                                |");
+            log_->info(" | 2. Redistributions in binary form must reproduce the above copyright notice,   |");
+            log_->info(" |    this list of conditions and the following disclaimer in the documentation   |");
+            log_->info(" |    and/or other materials provided with the distribution.                      |");
+            log_->info(" |                                                                                |");
+            log_->info(" | 3. Neither the name of the copyright holder nor the names of its               |");
+            log_->info(" |    contributors may be used to endorse or promote products derived from        |");
+            log_->info(" |    this software without specific prior written permission.                    |");
+            log_->info(" |                                                                                |");
+            log_->info(" | THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \" AS IS \"  |");
+            log_->info(" | AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE      |");
+            log_->info(" | IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE |");
+            log_->info(" | DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE   |");
+            log_->info(" | FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL     |");
+            log_->info(" | DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR     |");
+            log_->info(" | SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER     |");
+            log_->info(" | CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,  |");
+            log_->info(" | OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  |");
+            log_->info(" | OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.           |");
+            log_->info(" |                                                                                |");
+            log_->info(" |____________ Set `NoBanner: true` in config to disable this banner! ____________|");
+            log_->info(" ");
+            banner_printed = true;
+        }
+    }
 
 #ifdef LUXON_SERVER_ENABLE_MULTIPROCESSING
     if (ipc.is_open())
