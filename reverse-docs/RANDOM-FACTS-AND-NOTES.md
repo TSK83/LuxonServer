@@ -10,7 +10,7 @@ Photon runs on a custom ENet implementation. It might be the most beautiful part
 
 ## [ServerFramework](https://serverframework.com) and [Len Holgate](https://www.linkedin.com/in/len-holgate-515495)
 
-According to my research, it was mostly or at least in part designed by *Len Holgate* who appears to be a contractor according to [his blog](https://lenholgate.com). If you'd like to learn more, start here:
+According to my research, the custom ENet protocol was mostly or at least in part designed by *Len Holgate* who appears to be a contractor according to [his blog](https://lenholgate.com). If you'd like to learn more, start here:
 
 ### [.Net 4.0 Hosting](https://lenholgate.com/blog/2009/10/net-40-hosting.html)
 > My super secret game company client need their ENet implementation to run fast and to support 1000s of concurrent connections.
