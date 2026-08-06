@@ -204,9 +204,24 @@ I consider the ABI to be reasonably stable, but I recommend pinning Luxon Server
 
 For enabling it, see [Building](#building).
 
+## **I'd like to contribute!** Where should I start?
+
+If you're into reverse engineering binary protocols, please go take a look at the resources inside [reverse-docs](/reverse-docs/)! I need help figuring out how Quantum/Fusion work.\
+For this purpose I am releasing a Luxon base mitm proxy soon that can be used to intercept and decrypt Photon traffic on PC and consoles.
+
+If that's not your thing, you can always just go ahead and test your favorite Photon-based games and [create an issue](https://github.com/niansa/LuxonServer/issues/new/choose) if something doesn't work or [report your findings to the compatibility list](https://github.com/niansa/LuxonServer/edit/master/compatibility.txt).
+
+You can email me at *`tuxifan@posteo.de`* so we can figure out a communication channel or just contact me on Discord: *`tuxifan`*, Fluxer: *`Tuxifan#1889`*, Telegram: *`@tuxifan`* or Signal: *`tuxifan.31`*\
+Alternativly you can always just [open a GitHub discussion](https://github.com/niansa/LuxonServer/discussions).
+
+**Please note that using AI to contribute is advised against since it is very bad at being coherent with reverse engineering projects like this since public information often contradicts the technical reality.**\
+Additionally, AI contributions lead to low quality code that *works* but isn't well integrated and quite ugly with projects of this complexity if not baby-sitted and spoon-fed.
+
+I check PRs very thouroughly before merging them. Please be sure to check your PRs yourself before marking them as ready for review.
+
 ## FAQ
 
-**Q:** Why is the server completely single-threaded?\
+**Q:** Why is the server single-threaded?\
 **A:** Luxon Server is NOT supposed to be used as an alternative the the official Photon Server SDK. That means it doesn't have to handle loads big enough to saturate a single core even on very low-end systems. I have estimated the *New Nintendo 3DS* as a server to be able to handle at least 10, probably up to 30 concurrently active players! Plus, strict single-threading keeps the codebase simple.
 
 **Q:** Are there any plans on implementing *actual* load balancing (not just the protocol part of it) across multiple systems/processes?\
