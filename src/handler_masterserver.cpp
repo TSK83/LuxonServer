@@ -661,7 +661,7 @@ void MasterServerHandler::join_lobby(std::shared_ptr<Lobby> lobby) {
                                                     .game_delete = [this](Game *game) { pending_game_list_updates_.emplace_back(game->id); }});
     } else {
         joined_lobby_.emplace(std::move(lobby),
-                              GameListUpdateHandler{.game_update = [this](const std::shared_ptr<Game>& game) {}, .game_delete = [this](Game *game) {}});
+                              GameListUpdateHandler{.game_update = [](const std::shared_ptr<Game>& game) {}, .game_delete = [](Game *game) {}});
     }
 }
 
