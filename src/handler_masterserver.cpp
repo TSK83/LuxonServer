@@ -693,7 +693,7 @@ ser::Dictionary MasterServerHandler::get_lobby_stats(std::function<bool(const Lo
     fres[DictKeyCodes::AuthAndLobby::LobbyName] = std::vector<std::string>();
 
     auto& peer_count_arr = fres[DictKeyCodes::LoadBalancing::PeerCount].get<std::vector<int32_t>>();
-    auto& game_count_arr = fres[DictKeyCodes::LoadBalancing::GameCount].get<ser::ObjectArray>();
+    auto& game_count_arr = fres[DictKeyCodes::LoadBalancing::GameCount].get<std::vector<int32_t>>();
     auto& lobby_type_arr = fres[DictKeyCodes::AuthAndLobby::LobbyType].get<std::vector<uint8_t>>();
     auto& lobby_name_arr = fres[DictKeyCodes::AuthAndLobby::LobbyName].get<std::vector<std::string>>();
 
@@ -703,10 +703,10 @@ ser::Dictionary MasterServerHandler::get_lobby_stats(std::function<bool(const Lo
             if (lobby_filter && !lobby_filter(*lobby))
                 continue;
 
-            lobby_name_arr.emplace_back(lobby->name);
-            lobby_type_arr.emplace_back(lobby->type);
-            game_count_arr.emplace_back(static_cast<int32_t>(lobby->games.size()));
-            peer_count_arr.emplace_back(static_cast<int32_t>(lobby->get_peer_count()));
+            lobby_name_arr.push_back(lobby->name);
+            lobby_type_arr.push_back(lobby->type);
+            game_count_arr.push_back(lobby->games.size());
+            peer_count_arr.push_back(lobby->get_peer_count());
         }
     }
 
