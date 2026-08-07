@@ -97,10 +97,6 @@ Awaitable<> MasterServerHandler::HandleOperationRequest(ser::OperationRequestMes
             if (resp.return_code == ErrorCodes::Core::Ok)
                 resp.parameters[DictKeyCodes::LoadBalancing::Position] = static_cast<int32_t>(0);
 
-            // No turning back
-            if (!server_manager_.mark_command_committed())
-                lco_return;
-
             // Send response
             send(proto_->Serialize(resp, is_encrypted));
 
@@ -142,10 +138,6 @@ Awaitable<> MasterServerHandler::HandleOperationRequest(ser::OperationRequestMes
                 lco_return;
             }
 
-            // No turning back
-            if (!server_manager_.mark_command_committed())
-                lco_return;
-
             // Join the lobby
             join_lobby(std::move(*joined_lobby));
             peer_->log->info("Joined lobby: {}", joined_lobby_->lobby->name.empty() ? "(unnamed)" : joined_lobby_->lobby->name);
@@ -159,10 +151,6 @@ Awaitable<> MasterServerHandler::HandleOperationRequest(ser::OperationRequestMes
 
         case OpCodes::Lobby::LeaveLobby: {
             ZoneScopedN("HandleOperationRequest_LeaveLobby");
-
-            // No turning back
-            if (!server_manager_.mark_command_committed())
-                lco_return;
 
             // Try to leave lobby
             std::shared_ptr<Lobby> lobby;
@@ -203,10 +191,6 @@ Awaitable<> MasterServerHandler::HandleOperationRequest(ser::OperationRequestMes
                     return false;
                 return true;
             });
-
-            // No turning back
-            if (!server_manager_.mark_command_committed())
-                lco_return;
 
             // Send response
             send(proto_->Serialize(resp));
@@ -257,10 +241,6 @@ Awaitable<> MasterServerHandler::HandleOperationRequest(ser::OperationRequestMes
                 resp.return_code = ErrorCodes::Core::OperationInvalid;
                 resp.debug_message = e.what();
             }
-
-            // No turning back
-            if (!server_manager_.mark_command_committed())
-                lco_return;
 
             // Send response
             send(proto_->Serialize(resp));
@@ -315,10 +295,6 @@ Awaitable<> MasterServerHandler::HandleOperationRequest(ser::OperationRequestMes
                 std::string(server_manager_.resolve_server_address(ServerType::GameServer, peer_->transport_protocol, game->server_address));
             resp.parameters[DictKeyCodes::LoadBalancing::Token] = peer_->persistent->token;
             resp.parameters[DictKeyCodes::GameAndActor::GameId] = game->id;
-
-            // No turning back
-            if (!server_manager_.mark_command_committed())
-                lco_return;
 
             // Synchronize game, peer and token
             peer_->log->info("Joining newly created game: {}", game->id);
@@ -405,10 +381,6 @@ Awaitable<> MasterServerHandler::HandleOperationRequest(ser::OperationRequestMes
                     lco_return;
                 }
             }
-
-            // No turning back
-            if (!server_manager_.mark_command_committed())
-                lco_return;
 
             // Expect user
             game->expected_users.emplace(peer_->persistent->user_id);
@@ -550,10 +522,6 @@ Awaitable<> MasterServerHandler::HandleOperationRequest(ser::OperationRequestMes
                 is_new = true;
             }
 
-            // No turning back
-            if (!server_manager_.mark_command_committed())
-                lco_return;
-
             // Expect users  TODO: expect all given users
             selected_game->expected_users.emplace(peer_->persistent->user_id);
 
@@ -626,9 +594,6 @@ Awaitable<> MasterServerHandler::HandleOperationRequest(ser::OperationRequestMes
 
             resp.parameters[DictKeyCodes::AuthAndLobby::FindFriendsResponseOnlineList] = std::move(online_list);
             resp.parameters[DictKeyCodes::AuthAndLobby::FindFriendsResponseRoomIdList] = std::move(room_list);
-
-            if (!server_manager_.mark_command_committed())
-                lco_return;
 
             send(proto_->Serialize(resp));
             lco_return;

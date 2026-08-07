@@ -21,9 +21,6 @@
 #ifdef LUXON_SERVER_ENABLE_WEBSERVER
 #include "http_server.hpp"
 #endif
-#ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
-#include "command_restarter.hpp"
-#endif
 #ifdef LUXON_SERVER_MULTITHREADED
 #include "sidethread.hpp"
 #endif
@@ -53,11 +50,7 @@ struct Peer;
 struct PeerPersistent;
 class App;
 
-#ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
-template <typename T> using HandlerPtr = std::shared_ptr<T>;
-#else
 template <typename T> using HandlerPtr = std::unique_ptr<T>;
-#endif
 
 enum class ServerType { None, NameServer, MasterServer, GameServer };
 
@@ -213,12 +206,6 @@ private:
 #ifdef LUXON_ENET_ENABLE_METRICS
     enet::Metrics enet_metrics_;
     common::Timer enet_metrics_last_tick_;
-#endif
-
-#ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
-    std::unique_ptr<CommandRestarter> active_command_restarter_;
-    bool active_command_restarter_allowed_ = false;
-    bool inside_command_ = false;
 #endif
 
     bool running_ = true;
@@ -477,38 +464,6 @@ public:
     ///
     const enet::Metrics& get_enet_metrics() const { return enet_metrics_; }
 #endif
-
-#ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
-    ///
-    /// \brief Gets the restarter of the current command and cancel processing as soon as possible
-    ///
-    std::unique_ptr<CommandRestarter> take_command_restarter() {
-        return active_command_restarter_allowed_ ? std::exchange(active_command_restarter_, nullptr) : nullptr;
-    }
-#endif
-
-    ///
-    /// \brief Prevents current command from being restarted
-    ///
-    bool mark_command_committed() {
-        if (should_abort_active_command())
-            return false;
-#ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
-        active_command_restarter_allowed_ = false;
-#endif
-        return true;
-    }
-
-    ///
-    /// \brief Checks if processing of current command is to be aborted
-    ///
-    bool should_abort_active_command() const {
-#ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
-        return active_command_restarter_ == nullptr && inside_command_;
-#else
-        return false;
-#endif
-    }
 
     static std::function<void(const std::string& fd)> handle_start_subprocess;
 };

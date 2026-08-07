@@ -56,7 +56,7 @@ Awaitable<> GameServerHandler::HandleDisconnect() {
 
             if (!has_left_) {
                 // Call into plugins
-                GAME_PLUGINS_INVOKE(lco_return, {
+                GAME_PLUGINS_INVOKE({
                     OnLeaveGameCallInfo info{.leaver = game_peer_};
                     ser::OperationRequestMessage req{.operation_code = OpCodes::Lite::Leave};
                     lco_await game->execute_plugin_chain(&PluginBase::OnLeave, req, info);
@@ -131,10 +131,6 @@ Awaitable<> GameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
             if (resp.return_code == ErrorCodes::Core::Ok)
                 resp.parameters[DictKeyCodes::LoadBalancing::Position] = static_cast<int32_t>(0);
 
-            // No turning back
-            if (!server_manager_.mark_command_committed())
-                lco_return;
-
             // Send response
             send(proto_->Serialize(resp, is_encrypted));
 
@@ -207,7 +203,7 @@ Awaitable<> GameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
                 event.receivers = params->get<DictKeyCodes::RoutingAndEvents::ReceiverGroup>();
 
             // Call into plugins
-            GAME_PLUGINS_INVOKE(lco_return, {
+            GAME_PLUGINS_INVOKE({
                 OnRaiseEventCallInfo info{.raiser = game_peer_, .event = event, .cache_op = cache_op};
                 const Result res = lco_await game->execute_plugin_chain(&PluginBase::OnRaiseEvent, req, info);
 
@@ -220,10 +216,6 @@ Awaitable<> GameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
                     lco_return;
                 }
             });
-
-            // No turning back
-            if (!server_manager_.mark_command_committed())
-                lco_return;
 
             // Make sure client isn't attempting to raise a Photon event
             if (event.code > 220) {
@@ -367,7 +359,7 @@ Awaitable<> GameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
             }
 
             // Call into plugins
-            GAME_PLUGINS_INVOKE(lco_return, {
+            GAME_PLUGINS_INVOKE({
                 auto& game = current_game_;
                 Result res;
 
@@ -389,10 +381,6 @@ Awaitable<> GameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
             });
 
             if (is_master) {
-                // No turning back
-                if (!server_manager_.mark_command_committed())
-                    lco_return;
-
                 // Mark game as created
                 game->is_created = true;
 
@@ -430,10 +418,6 @@ Awaitable<> GameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
                 lco_return;
             }
 
-            // No turning back
-            if (!server_manager_.mark_command_committed())
-                lco_return;
-
             // Add peer to game
             game_peer_ = game->add_peer(std::move(game_peer));
             if (!game_peer_) {
@@ -445,7 +429,7 @@ Awaitable<> GameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
 
             // Call into plugins
             bool broadcast_actor_props = true;
-            GAME_PLUGINS_INVOKE(lco_return, {
+            GAME_PLUGINS_INVOKE({
                 OnJoinGameCallInfo info{.joiner = &game_peer};
                 const Result res = lco_await game->execute_plugin_chain(&PluginBase::OnJoinGame, req, info);
 
@@ -513,7 +497,7 @@ Awaitable<> GameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
             ZoneScopedN("HandleOperationRequest_Leave");
 
             // Call into plugins
-            GAME_PLUGINS_INVOKE(lco_return, {
+            GAME_PLUGINS_INVOKE({
                 OnLeaveGameCallInfo info{.leaver = game_peer_};
                 const Result res = lco_await game->execute_plugin_chain(&PluginBase::OnLeave, req, info);
 
@@ -523,10 +507,6 @@ Awaitable<> GameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
                     lco_return;
                 }
             });
-
-            // No turning back
-            if (!server_manager_.mark_command_committed())
-                lco_return;
 
             // Send success response
             const ser::OperationResponseMessage resp{.operation_code = OpCodes::Lite::Leave, .return_code = ErrorCodes::Core::Ok};
@@ -558,7 +538,7 @@ Awaitable<> GameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
             const auto& props_expected = params->get<DictKeyCodes::Properties::ExpectedValues>();
 
             // Call into plugins
-            GAME_PLUGINS_INVOKE(lco_return, {
+            GAME_PLUGINS_INVOKE({
                 BeforeSetPropertiesCallInfo info{
                     .setter = game_peer_, .broadcast = broadcast, .target_actor_id = actor_id, .update = props, .expected = props_expected};
                 const Result res = lco_await game->execute_plugin_chain(&PluginBase::BeforeSetProperties, req, info);
@@ -573,10 +553,6 @@ Awaitable<> GameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
                 broadcast = info.broadcast;
                 actor_id = info.target_actor_id;
             });
-
-            // No turning back
-            if (!server_manager_.mark_command_committed())
-                lco_return;
 
             // Set actor or game properties
             bool ok = true;
@@ -605,7 +581,7 @@ Awaitable<> GameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
             }
 
             // Call into plugins
-            GAME_PLUGINS_INVOKE(lco_return, {
+            GAME_PLUGINS_INVOKE({
                 OnSetPropertiesCallInfo info{
                     .setter = game_peer_, .broadcast = broadcast, .target_actor_id = actor_id, .update = props, .expected = props_expected};
                 const Result res = lco_await game->execute_plugin_chain(&PluginBase::OnSetProperties, req, info);
@@ -625,9 +601,6 @@ Awaitable<> GameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
                 send(proto_->Serialize(params.error()));
                 lco_return;
             }
-
-            if (!server_manager_.mark_command_committed())
-                lco_return;
 
             if (const auto *removes = params->get<DictKeyCodes::RoutingAndEvents::Remove>()) {
                 if (removes->empty()) {
@@ -683,10 +656,6 @@ Awaitable<> GameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
                     lco_return;
                 }
             }
-
-            // No turning back
-            if (!server_manager_.mark_command_committed())
-                lco_return;
 
             // Set as current game and disallow unsolicited join to prevent infinite recursion
             peer_->persistent->invite(std::move(target_game), req.operation_code == OpCodes::Matchmaking::CreateGame);

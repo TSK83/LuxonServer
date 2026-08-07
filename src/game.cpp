@@ -70,7 +70,7 @@ std::expected<ser::ByteArray, ser::Error> Event::get_cached_data(ser::IProtocol&
 
 Game::~Game() {
     // Call into plugins
-    GAME_PLUGINS_INVOKE({}, {
+    GAME_PLUGINS_INVOKE({
         OnCloseGameCallInfo info{.failed_on_create = !is_created};
         execute_plugin_chain(&PluginBase::OnCloseGame, info);
     });
@@ -216,7 +216,7 @@ restart:
             lobby->app->server_manager.add_scheduled_task(empty_game_ttl, [game = shared_from_this()]() {});
 
         // Call into plugins
-        GAME_PLUGINS_INVOKE({}, {
+        GAME_PLUGINS_INVOKE({
             BeforeCloseGameCallInfo info{.failed_on_create = !is_created};
             execute_plugin_chain(&PluginBase::BeforeCloseGame, info);
         });

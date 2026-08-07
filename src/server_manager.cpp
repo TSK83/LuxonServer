@@ -972,11 +972,8 @@ void ServerManager::setup() {
             handler->set_allow_unsolicited(config.allow_unsolicited);
 
             // Handler pointer must be owning with plugins enabled to ensure no destruction while coroutine is active
-#ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
-            auto handler_ptr = handler;
-#else
+
             auto *handler_ptr = handler.get();
-#endif
             auto *raw_handler = GetRawPointer(handler_ptr);
 
             // Install callbacks
@@ -1016,17 +1013,10 @@ void ServerManager::setup() {
                 }(*this, state, handler)_lco_detached;
             };
 
-#ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
-            enetPeer->on_payload_command = [this, handler_capture = std::weak_ptr<HandlerBase>(handler_ptr)](enet::EnetCommand&& cmd) {
-                [](ServerManager& self, enet::EnetCommand cmd, auto h_token) -> Awaitable<> {
-                    auto handler = h_token.lock();
-                    if (!handler)
-                        lco_return;
-#else
+
             enetPeer->on_payload_command = [this, handler_capture = handler_ptr](enet::EnetCommand&& cmd) {
                 [](ServerManager& self, enet::EnetCommand cmd, auto h_token) -> Awaitable<> {
                     auto *handler = h_token;
-#endif
                     auto& peer = handler->get_peer();
 
 #ifdef LUXON_SERVER_ENABLE_VISUALIZER
@@ -1040,25 +1030,12 @@ void ServerManager::setup() {
                     }
 #endif
 
-#ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
-                    self.active_command_restarter_ = CommandRestarter::create(handler, cmd);
-                    self.active_command_restarter_allowed_ = true;
-                    self.inside_command_ = true;
-#endif
                     try {
                         lco_await handler->HandleENetCommand(std::move(cmd));
                     } catch (const std::exception& e) {
                         peer->log->critical("Disconnecting due to uncaught exception in ENet command handler: {}", e.what());
                         peer->disconnect();
                     }
-#ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
-                    self.inside_command_ = false;
-                    if (self.active_command_restarter_allowed_ && !self.should_abort_active_command()) {
-                        peer->log->warn("Command did not commit!");
-                        self.mark_command_committed();
-                    }
-                    self.active_command_restarter_.reset();
-#endif
                 }(*this, std::move(cmd), std::move(handler_capture))_lco_detached;
             };
 

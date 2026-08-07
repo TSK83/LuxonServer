@@ -127,9 +127,8 @@ Possible compile time options:
  - **`LUXON_PLUGINS`** (default: empty): Semicolon separated list of CMake projects to configure containing `luxon_register_plugin()` CMake calls for statically linking a plugin into Luxon Server
  - **`LUXON_SERVER_ENABLE_MULTIPROCESSING`** (default: `OFF`): Enables use of multiprocessing (multi-threading-like but with true parallelism) via GameServer subprocesses
  - **`LUXON_SERVER_BUILD_FFI`** (default: `OFF`): Builds the FFI library
- - **`LUXON_SERVER_EXPOSE_FULL_FFI`** (default: `OFF`): Enables all features required to expose the *full* FFI. Forces `LUXON_SERVER_BUILD_FFI`, `LUXON_SERVER_ENABLE_PLUGINS`, `LUXON_SERVER_HOOKPOINTS`, and `LUXON_SERVER_ENABLE_COMMAND_RESTARTER` to be `ON`. Strictly disables `LUXON_SERVER_USE_SPDLOG`*
+ - **`LUXON_SERVER_EXPOSE_FULL_FFI`** (default: `OFF`): Enables all features required to expose the *full* FFI. Forces `LUXON_SERVER_BUILD_FFI`, `LUXON_SERVER_ENABLE_PLUGINS`, `LUXON_SERVER_HOOKPOINTS`, and `LUXON_SERVER_ENABLE_COROUTINES` to be `ON`. Strictly disables `LUXON_SERVER_USE_SPDLOG`*
  - **`LUXON_SERVER_HOOKPOINTS`** (default: `OFF`, forced `ON` if full FFI is exposed): Useful when linking LuxonServer as a library, allows hooking into some parts of the server via `ServerManager::hookpoints` (see [hookpoints.hpp](https://github.com/niansa/LuxonServer/blob/master/include/luxon/server/hookpoints.hpp))
- - **`LUXON_SERVER_ENABLE_COMMAND_RESTARTER`** (default: `OFF`, forced `ON` if full FFI is exposed): Allow commands to be restarted later for simple async support
  - **`LUXON_SERVER_ENABLE_COROUTINES`** (default: `OFF`, forced `ON` if full FFI is exposed): Turns command processing into stackless coroutines for better async support
  - **`LUXON_USE_EMBED_RESOURCE`** (default: `OFF` except on MSVC and WebAssembly): Uses the [embedresource](https://github.com/ankurvdev/embedresource) library for binary embedding instead of inline assembly
  - **`LUXON_SERVER_TRACY`** (default: `OFF`): Links and enables [Tracy](https://github.com/wolfpld/tracy) client

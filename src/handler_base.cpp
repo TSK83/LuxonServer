@@ -195,10 +195,6 @@ Awaitable<> HandlerBase::HandleInitRequest(ser::InitMessage&& req, const enet::E
     // Try to create new protocol implementation for given version
     auto protocol = ser::IProtocol::make(req.protocol_major, req.protocol_minor);
 
-    // No turning back
-    if (!server_manager_.mark_command_committed())
-        lco_return;
-
     // Answer init request
     if (protocol) {
         proto_ = std::move(protocol);
@@ -208,6 +204,8 @@ Awaitable<> HandlerBase::HandleInitRequest(ser::InitMessage&& req, const enet::E
         peer_->log->error("Connection init failed: Protocol mismatch");
         peer_->disconnect();
     }
+
+    lco_return;
 }
 
 Awaitable<> HandlerBase::HandleOperationRequest(ser::OperationRequestMessage&& req, bool is_encrypted, const enet::EnetCommandHeader& cmd_header) {
@@ -215,10 +213,6 @@ Awaitable<> HandlerBase::HandleOperationRequest(ser::OperationRequestMessage&& r
 
     // Only answer unknown operations on channel 0
     if (cmd_header.channel_id != 0)
-        lco_return;
-
-    // No turning back
-    if (!server_manager_.mark_command_committed())
         lco_return;
 
     // Handle authentication requests that are coming through despite peer already being authenticated
@@ -241,10 +235,6 @@ Awaitable<> HandlerBase::HandleInternalOperationRequest(ser::InternalOperationRe
     ZoneScoped;
 
     if (cmd_header.channel_id != 0)
-        lco_return;
-
-    // No turning back
-    if (!server_manager_.mark_command_committed())
         lco_return;
 
     if (req.operation_code == ICodes::IOpInitEncryption) {

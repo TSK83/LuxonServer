@@ -30,12 +30,10 @@ struct Hookpoints {
 } // namespace server
 
 #define LUXON_SERVER_HOOKPOINT_CSM(custom_server_manager, name, ...)                                                                                           \
-    if (custom_server_manager.hookpoints.name &&                                                                                                               \
-        (lco_await custom_server_manager.hookpoints.name(*this, __VA_ARGS__) || custom_server_manager.should_abort_active_command()))                          \
+    if (custom_server_manager.hookpoints.name && (lco_await custom_server_manager.hookpoints.name(*this, __VA_ARGS__)))                                        \
     lco_return
 #define LUXON_SERVER_HOOKPOINT_CSM_SYNC(custom_server_manager, name, ...)                                                                                      \
-    if (custom_server_manager.hookpoints.name &&                                                                                                               \
-        (custom_server_manager.hookpoints.name(*this, __VA_ARGS__) || custom_server_manager.should_abort_active_command()))                                    \
+    if (custom_server_manager.hookpoints.name && (custom_server_manager.hookpoints.name(*this, __VA_ARGS__)))                                                  \
     return
 #define LUXON_SERVER_HOOKPOINT(name, ...) LUXON_SERVER_HOOKPOINT_CSM(server_manager_, name, __VA_ARGS__)
 #define LUXON_SERVER_HOOKPOINT_SYNC(name, ...) LUXON_SERVER_HOOKPOINT_CSM_SYNC(server_manager_, name, __VA_ARGS__)
