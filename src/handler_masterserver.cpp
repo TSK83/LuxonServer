@@ -687,15 +687,15 @@ ser::Dictionary MasterServerHandler::get_lobby_stats(std::function<bool(const Lo
 
     ser::Dictionary fres;
 
-    fres[DictKeyCodes::LoadBalancing::PeerCount] = ser::ObjectArray();
-    fres[DictKeyCodes::LoadBalancing::GameCount] = ser::ObjectArray();
-    fres[DictKeyCodes::AuthAndLobby::LobbyType] = ser::ByteArray();
-    fres[DictKeyCodes::AuthAndLobby::LobbyName] = ser::ObjectArray();
+    fres[DictKeyCodes::LoadBalancing::PeerCount] = std::vector<int32_t>();
+    fres[DictKeyCodes::LoadBalancing::GameCount] = std::vector<int32_t>();
+    fres[DictKeyCodes::AuthAndLobby::LobbyType] = std::vector<uint8_t>();
+    fres[DictKeyCodes::AuthAndLobby::LobbyName] = std::vector<std::string>();
 
-    auto& peer_count_arr = fres[DictKeyCodes::LoadBalancing::PeerCount].get<ser::ObjectArray>();
+    auto& peer_count_arr = fres[DictKeyCodes::LoadBalancing::PeerCount].get<std::vector<int32_t>>();
     auto& game_count_arr = fres[DictKeyCodes::LoadBalancing::GameCount].get<ser::ObjectArray>();
-    auto& lobby_type_arr = fres[DictKeyCodes::AuthAndLobby::LobbyType].get<ser::ByteArray>();
-    auto& lobby_name_arr = fres[DictKeyCodes::AuthAndLobby::LobbyName].get<ser::ObjectArray>();
+    auto& lobby_type_arr = fres[DictKeyCodes::AuthAndLobby::LobbyType].get<std::vector<uint8_t>>();
+    auto& lobby_name_arr = fres[DictKeyCodes::AuthAndLobby::LobbyName].get<std::vector<std::string>>();
 
     auto& app = *peer_->persistent->app;
     for (const auto& [lobby_name, weak_lobby] : app.get_lobbies()) {
