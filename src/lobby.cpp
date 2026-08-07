@@ -113,8 +113,9 @@ std::expected<std::shared_ptr<Game>, ser::OperationResponseMessage> Lobby::creat
     std::shared_ptr<Game> fres(new Game(shared_from_this(), std::move(id), address), [](Game *ptr) {
         auto& lobby = ptr->lobby;
 
-        for (auto& handler : lobby->game_list_update_handlers)
-            handler.game_delete(ptr);
+        if (ptr->is_visible)
+            for (auto& handler : lobby->game_list_update_handlers)
+                handler.game_delete(ptr);
 
         // Erase from app game map
         auto& app_games = lobby->app->games_;
@@ -133,7 +134,7 @@ std::expected<std::shared_ptr<Game>, ser::OperationResponseMessage> Lobby::creat
     games.emplace_back(fres);
 
     for (auto& handler : game_list_update_handlers)
-        handler.game_create(fres);
+        handler.game_update(fres);
 
     return fres;
 }

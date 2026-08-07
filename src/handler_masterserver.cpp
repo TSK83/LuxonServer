@@ -60,9 +60,39 @@ using LobbyStats = Model<Parameter<std::string, DictKeyCodes::AuthAndLobby::Lobb
 void MasterServerHandler::HandleSlowUpdate() {
     ZoneScoped;
 
-    if (last_app_stats_.get() > 8000) {
+    if (last_batched_update_.get() > 5000) {
+        // Send app stats
         send_app_stats();
-        last_app_stats_.reset();
+
+        // Batch game list updates
+        if (!pending_game_list_updates_.empty()) {
+            constexpr size_t max_entries = 500;
+
+            auto game_list = std::make_shared<ser::Hashtable>();
+            for (const auto& [game_variant] : pending_game_list_updates_) {
+                switch (static_cast<GameListUpdate::Type>(game_variant.index())) {
+                case GameListUpdate::Update: {
+                    const auto game = std::get<std::weak_ptr<Game>>(game_variant).lock();
+                    if (game && game->is_visible)
+                        game_list->emplace(game->id, std::make_shared<ser::Hashtable>(game->get_lobby_game_props()));
+                } break;
+                case GameListUpdate::Delete: {
+                    const auto& game_id = std::get<std::string>(game_variant);
+                    auto& game_props = *((*game_list)[game_id] = std::make_shared<ser::Hashtable>()).get<ser::HashtablePtr>();
+                    game_props[GameProps::Removed] = true;
+                }
+                }
+            }
+            pending_game_list_updates_.clear();
+
+            // Send game list updates
+            ser::EventMessage event;
+            event.event_code = EventCodes::GameList;
+            event.parameters[DictKeyCodes::LoadBalancing::GameList] = std::move(game_list);
+            send(proto_->Serialize(event));
+        }
+
+        last_batched_update_.reset();
     }
 
     return HandlerBase::HandleSlowUpdate();
@@ -622,43 +652,16 @@ void MasterServerHandler::join_lobby(std::shared_ptr<Lobby> lobby) {
     ZoneScoped;
 
     if (lobby->type == LobbyType::Default) {
-        joined_lobby_.emplace(
-            std::move(lobby),
-            GameListUpdateHandler{
-                .game_create =
-                    [this](const std::shared_ptr<Game>& game) {
-                        // Send game creation
-                        ser::EventMessage event;
-                        event.event_code = EventCodes::GameList;
-                        event.parameters[DictKeyCodes::LoadBalancing::GameList] = get_game_list(*game->lobby, *game);
-
-                        send(proto_->Serialize(event));
-                    },
-                .game_change =
-                    [this](const std::shared_ptr<Game>& game) {
-                        // Send game property change
-                        ser::EventMessage event;
-                        event.event_code = EventCodes::GameList;
-                        event.parameters[DictKeyCodes::LoadBalancing::GameList] = get_game_list(*game->lobby, *game);
-
-                        send(proto_->Serialize(event));
-                    },
-                .game_delete =
-                    [this](Game *game) {
-                        // Send game removal
-                        ser::EventMessage event;
-                        event.event_code = EventCodes::GameList;
-                        auto& game_list =
-                            *(event.parameters[DictKeyCodes::LoadBalancing::GameList] = std::make_shared<ser::Hashtable>()).get<ser::HashtablePtr>();
-                        auto& game_props = *(game_list[game->id] = std::make_shared<ser::Hashtable>()).get<ser::HashtablePtr>();
-                        game_props[GameProps::Removed] = true;
-
-                        send(proto_->Serialize(event));
-                    }});
+        joined_lobby_.emplace(std::move(lobby),
+                              GameListUpdateHandler{.game_update =
+                                                        [this](const std::shared_ptr<Game>& game) {
+                                                            if (pending_game_list_updates_.size() < 500)
+                                                                pending_game_list_updates_.emplace_back(game);
+                                                        },
+                                                    .game_delete = [this](Game *game) { pending_game_list_updates_.emplace_back(game->id); }});
     } else {
-        joined_lobby_.emplace(std::move(lobby), GameListUpdateHandler{.game_create = [this](const std::shared_ptr<Game>& game) {},
-                                                                      .game_change = [this](const std::shared_ptr<Game>& game) {},
-                                                                      .game_delete = [this](Game *game) {}});
+        joined_lobby_.emplace(std::move(lobby),
+                              GameListUpdateHandler{.game_update = [this](const std::shared_ptr<Game>& game) {}, .game_delete = [this](Game *game) {}});
     }
 }
 
@@ -737,6 +740,8 @@ ser::HashtablePtr MasterServerHandler::get_game_list(Lobby& lobby, const Game& g
 ser::HashtablePtr MasterServerHandler::get_game_list(Lobby& lobby, std::function<bool(const Game&)> game_filter) {
     ZoneScoped;
 
+    constexpr size_t max_entries = 500;
+
     auto fres = std::make_shared<ser::Hashtable>();
 
     if (!joined_lobby_.has_value())
@@ -791,7 +796,6 @@ ser::HashtablePtr MasterServerHandler::get_game_list(Lobby& lobby, std::function
     });
 
     // Populate final list
-    const size_t max_entries = 500;
     for (size_t i = 0; i < std::min(sorted_games.size(), max_entries); ++i)
         fres->emplace(sorted_games[i]->id, std::make_shared<ser::Hashtable>(sorted_games[i]->get_lobby_game_props()));
 

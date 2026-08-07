@@ -24,8 +24,7 @@ struct Game;
 struct LobbyInfo;
 
 struct GameListUpdateHandler {
-    std::function<void(const std::shared_ptr<Game>&)> game_create;
-    std::function<void(const std::shared_ptr<Game>&)> game_change;
+    std::function<void(const std::shared_ptr<Game>&)> game_update;
     std::function<void(Game *)> game_delete;
 };
 
