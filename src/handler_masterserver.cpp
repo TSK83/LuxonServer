@@ -74,7 +74,8 @@ void MasterServerHandler::HandleSlowUpdate() {
                 case GameListUpdate::Update: {
                     const auto game = std::get<std::weak_ptr<Game>>(game_variant).lock();
                     if (game && game->is_visible)
-                        game_list->emplace(game->id, std::make_shared<ser::Hashtable>(game->get_lobby_game_props()));
+                        if (auto [element, inserted] = game_list->emplace(game->id, ser::null); inserted)
+                            element->second = std::make_shared<ser::Hashtable>(game->get_lobby_game_props());
                 } break;
                 case GameListUpdate::Delete: {
                     const auto& game_id = std::get<std::string>(game_variant);
