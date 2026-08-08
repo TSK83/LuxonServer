@@ -579,6 +579,14 @@ Awaitable<> MasterServerHandler::HandleOperationRequest(ser::OperationRequestMes
         case OpCodes::Social::FindFriends: {
             ZoneScopedN("HandleOperationRequest_FindFriends");
 
+            if (!app.get_settings().allow_find_friends) {
+                ser::OperationResponseMessage resp{.operation_code = OpCodes::Social::FindFriends,
+                                                   .return_code = ErrorCodes::Core::OperationNotAllowedInCurrentState,
+                                                   .debug_message = "FindFriends operation is not allowed."};
+                send(proto_->Serialize(resp));
+                lco_return;
+            }
+
             const auto params = models::FindFriends::decode(req);
             if (!params) {
                 send(proto_->Serialize(params.error()));
