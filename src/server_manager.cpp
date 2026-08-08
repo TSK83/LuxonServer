@@ -438,6 +438,11 @@ ServerManager::ServerManager(ServerManagerConfig config
     log_->set_level(log_level::trace);
 #endif
 
+#ifdef LUXON_SERVER_ENABLE_MULTIPROCESSING
+    if (parent_ipc_.is_open())
+        config.no_banner = true;
+#endif
+
     if (!config.no_banner) {
         static bool banner_printed = false;
         if (!banner_printed) {
