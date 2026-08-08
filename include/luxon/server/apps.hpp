@@ -50,10 +50,11 @@ struct AppSettings {
 
     std::string appid;
     unsigned auth_mode = Weak;
-    bool allow_find_friends = true;
     unsigned custom_anonymous_uid_mode = Allow;
     std::string anonymous_uid_prefix;
     unsigned max_peers = 0, max_peers_per_game = 0, max_game_count = 0;
+
+    bool allow_find_friends = true, allow_change_master = true;
 
     void enforce_global_config(ServerManager&);
 };

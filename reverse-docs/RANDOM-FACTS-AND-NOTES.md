@@ -44,6 +44,15 @@ I should however note that they've really missed out on a very simple yet effect
 
 It looks like newer Photon Realtime based libraries like Fusion and Quantum have gotten this part right though.
 
+### Optional limitations
+
+Exit Games allows developers to put certain restrictions on the Photon Realtime protocol in place on email request.
+
+So far, I have found the following options from searching public forums etc.:
+
+ - Blocked FindFriends opcode (to prevent stalking)
+ - Blocked MasterClientId setter (so master client can only change when current master client leaves)
+
 ## Photon Quantum
 
 From how I understand the protocol by just by dissecting its event payloads:

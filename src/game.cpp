@@ -479,6 +479,10 @@ void Game::insert_game_props(ser::Hashtable update) {
         if constexpr (GameProps::game_param == GameProps::IsVisible)                                                                                           \
             if (is_visible && value.is<bool>())                                                                                                                \
                 delete_from_lobby = !value.get<bool>();                                                                                                        \
+        /* If changing master isn't allowed, just ignore the attempt */                                                                                        \
+        if constexpr (GameProps::game_param == GameProps::MasterClientId)                                                                                      \
+            if (!lobby->app->get_settings().allow_change_master)                                                                                               \
+                break;                                                                                                                                         \
         update_lobby |= value.store_if<type>(var) && updates_lobby;                                                                                            \
         break;
                 PROP_MAP
