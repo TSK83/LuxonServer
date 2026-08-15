@@ -65,10 +65,10 @@ Lobby::Lobby(std::shared_ptr<App> app, std::string name, uint8_t type) : app(std
             sql,
             [](void *, int action, const char *arg1, const char *arg2, const char *, const char *) -> int {
                 // Only allow certain functions
-                if (action == SQLITE_FUNCTION && arg1 != nullptr) {
-                    std::string_view func(arg1);
+                if (action == SQLITE_FUNCTION && arg2 != nullptr) {
+                    std::string_view func(arg2);
 
-                    if (func != "LIKE" && func != "GLOB" && func != "lower" && func != "upper" && func != "ifnull" && func != "coalesce" && func != "abs" &&
+                    if (func != "like" && func != "glob" && func != "lower" && func != "upper" && func != "ifnull" && func != "coalesce" && func != "abs" &&
                         func != "length" && func != "count" && func != "min" && func != "max")
                         return SQLITE_DENY;
                     return SQLITE_OK;
@@ -113,8 +113,9 @@ std::expected<std::shared_ptr<Game>, ser::OperationResponseMessage> Lobby::creat
     std::shared_ptr<Game> fres(new Game(shared_from_this(), std::move(id), address), [](Game *ptr) {
         auto& lobby = ptr->lobby;
 
-        for (auto& handler : lobby->game_list_update_handlers)
-            handler.game_delete(ptr);
+        if (ptr->is_visible)
+            for (auto& handler : lobby->game_list_update_handlers)
+                handler.game_delete(ptr);
 
         // Erase from app game map
         auto& app_games = lobby->app->games_;
@@ -133,7 +134,7 @@ std::expected<std::shared_ptr<Game>, ser::OperationResponseMessage> Lobby::creat
     games.emplace_back(fres);
 
     for (auto& handler : game_list_update_handlers)
-        handler.game_create(fres);
+        handler.game_update(fres);
 
     return fres;
 }
@@ -212,7 +213,7 @@ std::vector<std::string> Lobby::query_lobbies(const std::string& sql_queries) {
 
         int status = sqlite3_prepare_v2(sql, full_query.c_str(), -1, &stmt, nullptr);
         if (status != SQLITE_OK)
-            throw std::runtime_error(std::format("SQL preparation failed: {}", sqlite3_errstr(status)));
+            throw std::runtime_error(std::format("SQL preparation failed: {}", sqlite3_errmsg(sql)));
 
         // Fetch matching room IDs
         while ((status = sqlite3_step(stmt)) == SQLITE_ROW) {

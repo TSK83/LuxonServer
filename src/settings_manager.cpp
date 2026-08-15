@@ -16,8 +16,10 @@ struct Migration {
 };
 
 // List of automatic migrations, future schema updates should be appended here
-const std::vector<Migration> MIGRATIONS = {{1,
-                                            R"(
+const std::vector<Migration> MIGRATIONS = {
+    // Migration 1
+    {1,
+     R"(
         CREATE TABLE app_settings (
             appid TEXT PRIMARY KEY,
             auth_mode INTEGER NOT NULL DEFAULT 1, -- 0=Weak, 1=Anonymous, 2=Strict
@@ -41,7 +43,12 @@ const std::vector<Migration> MIGRATIONS = {{1,
 
         CREATE INDEX idx_app_settings_appid ON app_settings(appid);
         CREATE INDEX idx_auth_providers_appid_type ON auth_providers(appid, auth_type);
-        )"}};
+        )"},
+
+    // Migration 2
+    {2, R"(
+        ALTER TABLE app_settings ADD COLUMN allow_change_master INTEGER NOT NULL DEFAULT 1;
+    )"}};
 } // anonymous namespace
 
 SettingsManager::SettingsManager(const std::filesystem::path& db_path) {
@@ -167,9 +174,11 @@ void SettingsManager::apply_migrations() {
 }
 
 std::optional<AppSettings> SettingsManager::get_app_settings(const std::string& appid) {
-    sqlite3pp::query q(*db_, "SELECT auth_mode, allow_find_friends, custom_anonymous_uid_mode, "
+    sqlite3pp::query q(*db_, "SELECT auth_mode, allow_find_friends, "
+                             "custom_anonymous_uid_mode, "
                              "anonymous_uid_prefix, max_peers, "
-                             "max_peers_per_game, max_game_count "
+                             "max_peers_per_game, max_game_count,"
+                             "allow_change_master "
                              "FROM app_settings WHERE appid = ?");
     q.bind(1, appid.c_str(), sqlite3pp::copy_semantic::nocopy);
 
@@ -184,13 +193,13 @@ std::optional<AppSettings> SettingsManager::get_app_settings(const std::string& 
     settings.appid = appid;
 
     settings.auth_mode = (*it).get<int>(0);
-
     settings.allow_find_friends = (*it).get<int>(1) != 0;
     settings.custom_anonymous_uid_mode = std::clamp((*it).get<int>(2), 0, 2);
     settings.anonymous_uid_prefix = (*it).get<std::string>(3);
     settings.max_peers = (*it).get<int>(4);
     settings.max_peers_per_game = (*it).get<int>(5);
     settings.max_game_count = (*it).get<int>(6);
+    settings.allow_change_master = (*it).get<int>(7);
 
     return settings;
 }

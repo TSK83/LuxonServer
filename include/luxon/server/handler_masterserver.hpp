@@ -12,6 +12,8 @@
 #include <functional>
 #include <list>
 #include <optional>
+#include <vector>
+#include <variant>
 #include <commoncpp/timer.hpp>
 #include <luxon/ser_types.hpp>
 
@@ -34,6 +36,11 @@ public:
     std::string_view get_joined_lobby_name() const { return joined_lobby_.has_value() ? joined_lobby_->lobby->name : std::string_view{}; }
 
 protected:
+    struct GameListUpdate {
+        enum Type : size_t { Update, Delete };
+        std::variant<std::weak_ptr<Game>, std::string> game;
+    };
+
     struct JoinedLobby {
         std::shared_ptr<Lobby> lobby;
         std::list<GameListUpdateHandler>::iterator game_list_update_handler;
@@ -50,7 +57,9 @@ protected:
     };
 
     std::optional<JoinedLobby> joined_lobby_;
-    common::Timer last_app_stats_;
+    common::Timer last_batched_update_;
+
+    std::vector<GameListUpdate> pending_game_list_updates_;
 
     std::expected<std::shared_ptr<Lobby>, ser::OperationResponseMessage> get_requested_lobby(const ser::OperationRequestMessage& req);
 

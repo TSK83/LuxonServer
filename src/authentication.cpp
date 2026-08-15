@@ -76,7 +76,6 @@ Awaitable<ser::OperationResponseMessage> authenticate(ServerManager& server_mana
         if (!params)
             lco_return params.error();
 
-        server_manager.mark_command_committed();
         peer.persistent = load_persistent_peer(server_manager, params->get<DictKeyCodes::LoadBalancing::Token>(), refresh_token);
     } else {
         // Regular mechanism
@@ -170,8 +169,6 @@ Awaitable<ser::OperationResponseMessage> authenticate(ServerManager& server_mana
 #endif
         }
 
-        // No turning back
-        server_manager.mark_command_committed();
         peer.persistent = std::move(p);
     }
 

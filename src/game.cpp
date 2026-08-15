@@ -70,7 +70,7 @@ std::expected<ser::ByteArray, ser::Error> Event::get_cached_data(ser::IProtocol&
 
 Game::~Game() {
     // Call into plugins
-    GAME_PLUGINS_INVOKE({}, {
+    GAME_PLUGINS_INVOKE({
         OnCloseGameCallInfo info{.failed_on_create = !is_created};
         execute_plugin_chain(&PluginBase::OnCloseGame, info);
     });
@@ -216,7 +216,7 @@ restart:
             lobby->app->server_manager.add_scheduled_task(empty_game_ttl, [game = shared_from_this()]() {});
 
         // Call into plugins
-        GAME_PLUGINS_INVOKE({}, {
+        GAME_PLUGINS_INVOKE({
             BeforeCloseGameCallInfo info{.failed_on_create = !is_created};
             execute_plugin_chain(&PluginBase::BeforeCloseGame, info);
         });
@@ -377,9 +377,11 @@ void Game::trigger_lobby_update() {
     ZoneScoped;
 
     // Call handlers
-    auto shared_this = shared_from_this();
-    for (auto& handler : lobby->game_list_update_handlers)
-        handler.game_change(shared_this);
+    if (is_visible) {
+        auto shared_this = shared_from_this();
+        for (auto& handler : lobby->game_list_update_handlers)
+            handler.game_update(shared_this);
+    }
 
 #ifdef LUXON_SERVER_ENABLE_MULTIPROCESSING
     // Send IPC event
@@ -411,7 +413,6 @@ ser::Value Game::get_game_prop(const ser::Value& key) {
         switch (key.get<uint8_t>()) {
 #define PROP_MAP_ENTRY(game_param, type, var, updates_lobby)                                                                                                   \
     case GameProps::game_param:                                                                                                                                \
-        update_lobby |= updates_lobby;                                                                                                                         \
         return var;
             PROP_MAP
 #undef PROP_MAP_ENTRY
@@ -419,9 +420,6 @@ ser::Value Game::get_game_prop(const ser::Value& key) {
             return static_cast<uint8_t>(peers.size() + dummy_peer_count);
         }
     }
-
-    if (update_lobby)
-        trigger_lobby_update();
 
     if (auto res = custom_props.find(key); res != custom_props.end())
         return res->second;
@@ -469,6 +467,7 @@ void Game::insert_game_props(ser::Hashtable update) {
 
     const bool delete_null = flags & GameFlags::DeleteNullProps;
     bool update_lobby = false;
+    bool delete_from_lobby = false;
 
     for (const auto& [key, value] : update) {
         if (key.is<uint8_t>()) {
@@ -476,6 +475,14 @@ void Game::insert_game_props(ser::Hashtable update) {
             switch (key.get<uint8_t>()) {
 #define PROP_MAP_ENTRY(game_param, type, var, updates_lobby)                                                                                                   \
     case GameProps::game_param:                                                                                                                                \
+        /* Delete game from lobby list if freshly made invisible */                                                                                            \
+        if constexpr (GameProps::game_param == GameProps::IsVisible)                                                                                           \
+            if (is_visible && value.is<bool>())                                                                                                                \
+                delete_from_lobby = !value.get<bool>();                                                                                                        \
+        /* If changing master isn't allowed, just ignore the attempt */                                                                                        \
+        if constexpr (GameProps::game_param == GameProps::MasterClientId)                                                                                      \
+            if (!lobby->app->get_settings().allow_change_master)                                                                                               \
+                break;                                                                                                                                         \
         update_lobby |= value.store_if<type>(var) && updates_lobby;                                                                                            \
         break;
                 PROP_MAP
@@ -490,6 +497,11 @@ void Game::insert_game_props(ser::Hashtable update) {
                     custom_props.erase(res);
         }
     }
+
+    // Delete game from lobby list if made invisible
+    if (delete_from_lobby)
+        for (auto& handler : lobby->game_list_update_handlers)
+            handler.game_delete(this);
 
     if (update_lobby)
         trigger_lobby_update();

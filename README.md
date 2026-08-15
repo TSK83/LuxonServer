@@ -127,9 +127,9 @@ Possible compile time options:
  - **`LUXON_PLUGINS`** (default: empty): Semicolon separated list of CMake projects to configure containing `luxon_register_plugin()` CMake calls for statically linking a plugin into Luxon Server
  - **`LUXON_SERVER_ENABLE_MULTIPROCESSING`** (default: `OFF`): Enables use of multiprocessing (multi-threading-like but with true parallelism) via GameServer subprocesses
  - **`LUXON_SERVER_BUILD_FFI`** (default: `OFF`): Builds the FFI library
- - **`LUXON_SERVER_EXPOSE_FULL_FFI`** (default: `OFF`): Enables all features required to expose the *full* FFI. Forces `LUXON_SERVER_BUILD_FFI`, `LUXON_SERVER_ENABLE_PLUGINS`, `LUXON_SERVER_HOOKPOINTS`, and `LUXON_SERVER_ENABLE_COMMAND_RESTARTER` to be `ON`. Strictly disables `LUXON_SERVER_USE_SPDLOG`*
+ - **`LUXON_SERVER_EXPOSE_FULL_FFI`** (default: `OFF`): Enables all features required to expose the *full* FFI. Forces `LUXON_SERVER_BUILD_FFI`, `LUXON_SERVER_ENABLE_PLUGINS`, `LUXON_SERVER_HOOKPOINTS`, and `LUXON_SERVER_ENABLE_COROUTINES` to be `ON`. Strictly disables `LUXON_SERVER_USE_SPDLOG`*
  - **`LUXON_SERVER_HOOKPOINTS`** (default: `OFF`, forced `ON` if full FFI is exposed): Useful when linking LuxonServer as a library, allows hooking into some parts of the server via `ServerManager::hookpoints` (see [hookpoints.hpp](https://github.com/niansa/LuxonServer/blob/master/include/luxon/server/hookpoints.hpp))
- - **`LUXON_SERVER_ENABLE_COMMAND_RESTARTER`** (default: `OFF`, forced `ON` if full FFI is exposed): Allow commands to be restarted later for better async support
+ - **`LUXON_SERVER_ENABLE_COROUTINES`** (default: `OFF`, forced `ON` if full FFI is exposed): Turns command processing into stackless coroutines for better async support
  - **`LUXON_USE_EMBED_RESOURCE`** (default: `OFF` except on MSVC and WebAssembly): Uses the [embedresource](https://github.com/ankurvdev/embedresource) library for binary embedding instead of inline assembly
  - **`LUXON_SERVER_TRACY`** (default: `OFF`): Links and enables [Tracy](https://github.com/wolfpld/tracy) client
  - **`LUXON_SERVER_TRACY_ON_DEMAND`** (default: `ON`): Only collect tracy data with profiler server connected. *Only available if `LUXON_SERVER_TRACY` is `ON`*
@@ -203,9 +203,24 @@ I consider the ABI to be reasonably stable, but I recommend pinning Luxon Server
 
 For enabling it, see [Building](#building).
 
+## **I'd like to contribute!** Where should I start?
+
+If you're into reverse engineering binary protocols, please go take a look at the resources inside [reverse-docs](/reverse-docs/)! I need help figuring out how Quantum/Fusion work.\
+For this purpose I am releasing a Luxon base mitm proxy soon that can be used to intercept and decrypt Photon traffic on PC and consoles.
+
+If that's not your thing, you can always just go ahead and test your favorite Photon-based games and [create an issue](https://github.com/niansa/LuxonServer/issues/new/choose) if something doesn't work or [report your findings to the compatibility list](https://github.com/niansa/LuxonServer/edit/master/compatibility.txt).
+
+You can email me at *`tuxifan@posteo.de`* so we can figure out a communication channel or just contact me on Discord: *`tuxifan`*, Fluxer: *`Tuxifan#1889`*, Telegram: *`@tuxifan`* or Signal: *`tuxifan.31`*\
+Alternativly you can always just [open a GitHub discussion](https://github.com/niansa/LuxonServer/discussions).
+
+**Please note that using AI to contribute is advised against since it is very bad at being coherent with reverse engineering projects like this since public information often contradicts the technical reality.**\
+Additionally, AI contributions lead to low quality code that *works* but isn't well integrated and quite ugly with projects of this complexity if not baby-sitted and spoon-fed.
+
+I check PRs very thouroughly before merging them. Please be sure to check your PRs yourself before marking them as ready for review.
+
 ## FAQ
 
-**Q:** Why is the server completely single-threaded?\
+**Q:** Why is the server single-threaded?\
 **A:** Luxon Server is NOT supposed to be used as an alternative the the official Photon Server SDK. That means it doesn't have to handle loads big enough to saturate a single core even on very low-end systems. I have estimated the *New Nintendo 3DS* as a server to be able to handle at least 10, probably up to 30 concurrently active players! Plus, strict single-threading keeps the codebase simple.
 
 **Q:** Are there any plans on implementing *actual* load balancing (not just the protocol part of it) across multiple systems/processes?\

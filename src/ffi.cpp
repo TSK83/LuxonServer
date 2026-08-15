@@ -14,9 +14,6 @@
 #include "luxon/server/coro_support.hpp"
 #include "luxon/ser_ipc_binary.hpp"
 #include "luxon/ser_types.hpp"
-#ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
-#include "luxon/server/command_restarter.hpp"
-#endif
 #ifdef LUXON_SERVER_ENABLE_PLUGINS
 #include "luxon/server/game_plugin_registry.hpp"
 #include "luxon/server/game_plugin_base.hpp"
@@ -1899,54 +1896,17 @@ ServerManagerHandle gameGetServerManager(GameHandle game) {
  * COMMAND RESTARTER INTERFACE IMPLEMENTATION
  * ============================================================================ */
 
-bool serverManagerShouldAbortActiveCommand(ServerManagerHandle manager) {
-    return ffi_safe_call<bool>(false, [=] {
-        auto *m = unwrap<server::ServerManager>(manager);
-        return m ? m->should_abort_active_command() : false; //
-    });
-}
+bool serverManagerShouldAbortActiveCommand(ServerManagerHandle manager) { return false; }
 
-void serverManagerMarkCommandCommited(ServerManagerHandle manager) {
-    ffi_safe_exec([=] {
-        if (auto *m = unwrap<server::ServerManager>(manager))
-            m->mark_command_committed();
-    });
-}
+void serverManagerMarkCommandCommited(ServerManagerHandle manager) {}
 
 CommandRestarterHandle serverManagerTakeCommandRestarter(ServerManagerHandle manager) {
-#ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
-    return ffi_safe_call<CommandRestarterHandle>(wrap<CommandRestarterHandle>(nullptr), [=] {
-        auto *m = unwrap<server::ServerManager>(manager);
-        if (!m)
-            return wrap<CommandRestarterHandle>(nullptr);
-        // Release ownership of the unique_ptr to hand it over to the FFI boundary
-        return wrap<CommandRestarterHandle>(m->take_command_restarter().release());
-    });
-#else
     return wrap<CommandRestarterHandle>(nullptr);
-#endif
 }
 
-void commandRestarterRestart(CommandRestarterHandle restarter) {
-#ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
-    ffi_safe_exec([=] {
-        if (auto *r = unwrap<server::CommandRestarter>(restarter)) {
-            // Reclaim ownership to pass to the static restart method
-            std::unique_ptr<server::CommandRestarter> ptr(r);
-            server::CommandRestarter::restart(std::move(ptr));
-        }
-    });
-#endif
-}
+void commandRestarterRestart(CommandRestarterHandle restarter) {}
 
-void destroyCommandRestarter(CommandRestarterHandle restarter) {
-#ifdef LUXON_SERVER_ENABLE_COMMAND_RESTARTER
-    ffi_safe_exec([=] {
-        if (restarter)
-            delete unwrap<server::CommandRestarter>(restarter);
-    });
-#endif
-}
+void destroyCommandRestarter(CommandRestarterHandle restarter) {}
 
 /* ============================================================================
  * PLUGINS & HOOKPOINTS REGISTRATION IMPLEMENTATION

@@ -17,7 +17,8 @@ This table stores the core configuration settings for each application managed b
     * `0` = Weak: Any authentication method will always succeed, no matter what
     * `1` = Anonymous: Anonymous authentication method will always succeed, no matter what
     * `2` = Strict: Anonymous authentication will be disabled
-* **`allow_find_friends`** (INTEGER): A boolean-like flag where `1` means finding friends is allowed and `0` means it is disabled. It defaults to `1`.
+* **`allow_find_friends`** (INTEGER): A boolean-like flag where `1` means `FindFriends` is allowed and `0` means it is disabled. It defaults to `1`.
+* **`allow_change_master`** (INTEGER): A boolean-like flag where `1` means setting `MasterClientId` is allowed and `0` means it is disabled. It defaults to `1`.
 * **`custom_anonymous_uid_mode`** (INTEGER): Controls how user IDs (UIDs) are generated for anonymous users. It defaults to `2`.
     * `0` = Allow: Allows anonymous users to have any user ID
     * `1` = AllowWithPrefix: Allows anonymous users to have any user ID, but the `anonymous_uid_prefix` will be prepended

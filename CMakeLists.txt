@@ -40,7 +40,6 @@ option(LUXON_SERVER_EXPOSE_FULL_FFI "Build with full FFI interface exposed" OFF)
 
 option(LUXON_SERVER_HOOKPOINTS "Allows library user or plugins to hook into specific parts of Luxon Server" OFF)
 option(LUXON_SERVER_ENABLE_PLUGINS "Enable use of plugins" OFF)
-option(LUXON_SERVER_ENABLE_COMMAND_RESTARTER "Allow commands to be restarted later for simple async support" OFF)
 option(LUXON_SERVER_ENABLE_COROUTINES "Turns command processing into stackless coroutines for better async support" OFF)
 
 if (LUXON_SERVER_EXPOSE_FULL_FFI)
@@ -50,7 +49,6 @@ if (LUXON_SERVER_EXPOSE_FULL_FFI)
     endif()
     set(LUXON_SERVER_HOOKPOINTS ON CACHE BOOL "Allows library user or plugins to hook into specific parts of Luxon Server" FORCE)
     set(LUXON_SERVER_ENABLE_PLUGINS ON CACHE BOOL "Enable use of plugins" FORCE)
-    set(LUXON_SERVER_ENABLE_COMMAND_RESTARTER ON CACHE BOOL "Allow commands to be restarted later for simple async support" FORCE)
     set(LUXON_SERVER_ENABLE_COROUTINES ON CACHE BOOL "Turns command processing into stackless coroutines for better async support" FORCE)
 endif()
 
@@ -251,11 +249,6 @@ if (LUXON_SERVER_ENABLE_PLUGINS)
         )
         target_compile_definitions(luxon_server_lib PUBLIC LUXON_SERVER_MULTITHREADED)
     endif()
-endif()
-
-if (LUXON_SERVER_ENABLE_COMMAND_RESTARTER)
-    target_sources(luxon_server_lib PRIVATE include/luxon/server/command_restarter.hpp src/command_restarter.cpp)
-    target_compile_definitions(luxon_server_lib PUBLIC LUXON_SERVER_ENABLE_COMMAND_RESTARTER)
 endif()
 
 if (LUXON_SERVER_ENABLE_COROUTINES)
