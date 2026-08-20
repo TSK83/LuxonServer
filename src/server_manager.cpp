@@ -98,6 +98,7 @@ using luxon_sock_t = int;
 #endif
 
 namespace server {
+std::function<void(const std::string&)> ServerManager::handle_start_subprocess{};
 
 std::string get_local_ip_for_client(const std::string& target_ip) {
     if (target_ip.empty())
@@ -110,65 +111,54 @@ std::string get_local_ip_for_client(const std::string& target_ip) {
     if (sock == LUXON_INVALID_SOCKET)
         return is_ipv6 ? "::1" : "127.0.0.1";
 
+    sockaddr_storage serv;
+    memset(&serv, 0, sizeof(serv));
+    socklen_t serv_len = 0;
+
     if (is_ipv6) {
-        sockaddr_in6 serv;
-        memset(&serv, 0, sizeof(serv));
-        serv.sin6_family = AF_INET6;
-        serv.sin6_port = htons(53);
-
-        if (inet_pton(AF_INET6, target_ip.c_str(), &serv.sin6_addr) <= 0) {
+        auto* serv6 = reinterpret_cast<sockaddr_in6*>(&serv);
+        serv6->sin6_family = AF_INET6;
+        serv6->sin6_port = htons(53);
+        if (inet_pton(AF_INET6, target_ip.c_str(), &serv6->sin6_addr) <= 0) {
             LUXON_CLOSE_SOCKET(sock);
             return "::1";
         }
-
-        if (connect(sock, (const sockaddr*)&serv, sizeof(serv)) == LUXON_SOCKET_ERROR) {
-            LUXON_CLOSE_SOCKET(sock);
-            return "::1";
-        }
-
-        sockaddr_in6 name;
-        memset(&name, 0, sizeof(name));
-        socklen_t namelen = sizeof(name);
-        if (getsockname(sock, (sockaddr*)&name, &namelen) == LUXON_SOCKET_ERROR) {
-            LUXON_CLOSE_SOCKET(sock);
-            return "::1";
-        }
-
-        char buffer[INET6_ADDRSTRLEN] = {0};
-        inet_ntop(AF_INET6, &name.sin6_addr, buffer, sizeof(buffer));
-        LUXON_CLOSE_SOCKET(sock);
-
-        return std::string(buffer);
+        serv_len = sizeof(sockaddr_in6);
     } else {
-        sockaddr_in serv;
-        memset(&serv, 0, sizeof(serv));
-        serv.sin_family = AF_INET;
-        serv.sin_port = htons(53);
-
-        if (inet_pton(AF_INET, target_ip.c_str(), &serv.sin_addr) <= 0) {
+        auto* serv4 = reinterpret_cast<sockaddr_in*>(&serv);
+        serv4->sin_family = AF_INET;
+        serv4->sin_port = htons(53);
+        if (inet_pton(AF_INET, target_ip.c_str(), &serv4->sin_addr) <= 0) {
             LUXON_CLOSE_SOCKET(sock);
             return "127.0.0.1";
         }
-
-        if (connect(sock, (const sockaddr*)&serv, sizeof(serv)) == LUXON_SOCKET_ERROR) {
-            LUXON_CLOSE_SOCKET(sock);
-            return "127.0.0.1";
-        }
-
-        sockaddr_in name;
-        memset(&name, 0, sizeof(name));
-        socklen_t namelen = sizeof(name);
-        if (getsockname(sock, (sockaddr*)&name, &namelen) == LUXON_SOCKET_ERROR) {
-            LUXON_CLOSE_SOCKET(sock);
-            return "127.0.0.1";
-        }
-
-        char buffer[INET_ADDRSTRLEN] = {0};
-        inet_ntop(AF_INET, &name.sin_addr, buffer, sizeof(buffer));
-        LUXON_CLOSE_SOCKET(sock);
-
-        return std::string(buffer);
+        serv_len = sizeof(sockaddr_in);
     }
+
+    if (connect(sock, reinterpret_cast<const sockaddr*>(&serv), serv_len) == LUXON_SOCKET_ERROR) {
+        LUXON_CLOSE_SOCKET(sock);
+        return is_ipv6 ? "::1" : "127.0.0.1";
+    }
+
+    sockaddr_storage name;
+    memset(&name, 0, sizeof(name));
+    socklen_t namelen = sizeof(name);
+    if (getsockname(sock, reinterpret_cast<sockaddr*>(&name), &namelen) == LUXON_SOCKET_ERROR) {
+        LUXON_CLOSE_SOCKET(sock);
+        return is_ipv6 ? "::1" : "127.0.0.1";
+    }
+
+    char buffer[INET6_ADDRSTRLEN] = {0};
+    if (is_ipv6) {
+        auto* name6 = reinterpret_cast<sockaddr_in6*>(&name);
+        inet_ntop(AF_INET6, &name6->sin6_addr, buffer, sizeof(buffer));
+    } else {
+        auto* name4 = reinterpret_cast<sockaddr_in*>(&name);
+        inet_ntop(AF_INET, &name4->sin_addr, buffer, sizeof(buffer));
+    }
+    LUXON_CLOSE_SOCKET(sock);
+
+    return std::string(buffer);
 }
 
 std::string resolve_dynamic_address(std::string_view configured_address, std::string_view client_endpoint) {
@@ -179,35 +169,27 @@ std::string resolve_dynamic_address(std::string_view configured_address, std::st
     std::string ep_str(client_endpoint);
     std::string client_ip;
 
-    // 1. Safe IP Extraction
     size_t bracket_start = ep_str.find('[');
     size_t bracket_end = ep_str.find(']');
 
     if (bracket_start != std::string::npos && bracket_end != std::string::npos && bracket_end > bracket_start) {
-        // Case: IPv6 with bracket (e.g. "[fe80::1]:5058")
         client_ip = ep_str.substr(bracket_start + 1, bracket_end - bracket_start - 1);
     } else {
-        // Case: No brackets
         size_t last_colon = ep_str.find_last_of(':');
         size_t first_colon = ep_str.find_first_of(':');
 
         if (last_colon != std::string::npos && first_colon == last_colon) {
-            // Exactly one ':' means IPv4 with port (e.g. "192.168.1.5:5058")
             client_ip = ep_str.substr(0, last_colon);
         } else {
-            // Multiple ':' means raw IPv6, No ':' means raw IPv4
             client_ip = ep_str;
         }
     }
 
-    // 2. Remove IPv4-mapped IPv6 prefix if present (e.g. "::ffff:192.168.1.5")
     if (client_ip.starts_with("::ffff:")) 
         client_ip.erase(0, 7);
 
     return get_local_ip_for_client(client_ip) + ":" + port;
 }
-
-std::function<void(const std::string&)> ServerManager::handle_start_subprocess{};
 
 namespace {
 ServerType StringToServerType(const std::string& str) {
@@ -908,7 +890,7 @@ void ServerManager::setup_http_server() {
 #endif
 
 #ifdef LUXON_SERVER_ENABLE_MULTIPROCESSING
-void ServerManager::process_child_ipc_message(IPC& sender, const luxon::ser::Message& msg) {
+void ServerManager::process_child_ipc_message(IPC& sender, const ser::Message& msg) {
     ipc_broadcast_skip_ = &sender;
 
     // Only accept event messages
@@ -919,7 +901,7 @@ void ServerManager::process_child_ipc_message(IPC& sender, const luxon::ser::Mes
     return process_ipc_event(*event_msg);
 }
 
-void ServerManager::process_parent_ipc_message(IPC& sender, const luxon::ser::Message& msg) {
+void ServerManager::process_parent_ipc_message(IPC& sender, const ser::Message& msg) {
     ipc_broadcast_skip_ = &sender;
 
     // Only accept event messages
