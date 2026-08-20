@@ -32,8 +32,7 @@ Awaitable<> NameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
             if (resp.return_code == ErrorCodes::Core::Ok) {
                 resp.parameters[DictKeyCodes::LoadBalancing::UserId] = peer_->persistent->user_id;
                 resp.parameters[DictKeyCodes::LoadBalancing::Address] =
-                    resolve_dynamic_address(server_manager_.get_random_server_address(ServerType::MasterServer, peer_->transport_protocol),
-                                            peer_->enet_peer->remote_endpoint()->to_string());
+                    std::string(resolve_dynamic_address(server_manager_.get_random_server_address(ServerType::MasterServer, peer_->transport_protocol), peer_->enet_peer->remote_endpoint()->to_string()));
             }
 
             // Send payload
@@ -54,7 +53,7 @@ Awaitable<> NameServerHandler::HandleOperationRequest(ser::OperationRequestMessa
 
             std::vector<std::string> addresses(regions.size());
             for (size_t i = 0; i < regions.size(); ++i)
-                addresses[i] = std::string(server_manager_.get_random_server_address(ServerType::MasterServer, peer_->transport_protocol));
+                addresses[i] = std::string(resolve_dynamic_address(server_manager_.get_random_server_address(ServerType::MasterServer, peer_->transport_protocol), peer_->enet_peer->remote_endpoint()->to_string()));
 
             // Give dummy response
             ser::OperationResponseMessage resp{.operation_code = OpCodes::RpcAndMisc::GetRegions, .return_code = 0};
