@@ -323,8 +323,7 @@ Awaitable<> MasterServerHandler::HandleOperationRequest(ser::OperationRequestMes
             // Build response
             ser::OperationResponseMessage resp{.operation_code = OpCodes::Matchmaking::CreateGame, .return_code = ErrorCodes::Core::Ok};
             resp.parameters[DictKeyCodes::LoadBalancing::Address] =
-                resolve_dynamic_address(server_manager_.resolve_server_address(ServerType::GameServer, peer_->transport_protocol, game->server_address),
-                                        peer_->enet_peer->remote_endpoint()->to_string());
+                std::string(resolve_dynamic_address(server_manager_.resolve_server_address(ServerType::GameServer, peer_->transport_protocol, game->server_address), peer_->enet_peer->remote_endpoint()->to_string()));
             resp.parameters[DictKeyCodes::LoadBalancing::Token] = peer_->persistent->token;
             resp.parameters[DictKeyCodes::GameAndActor::GameId] = game->id;
 
@@ -420,8 +419,7 @@ Awaitable<> MasterServerHandler::HandleOperationRequest(ser::OperationRequestMes
             // Build and send response
             ser::OperationResponseMessage resp{.operation_code = OpCodes::Matchmaking::JoinGame, .return_code = ErrorCodes::Core::Ok};
             resp.parameters[DictKeyCodes::LoadBalancing::Address] =
-                resolve_dynamic_address(server_manager_.resolve_server_address(ServerType::GameServer, peer_->transport_protocol, game->server_address),
-                                        peer_->enet_peer->remote_endpoint()->to_string());
+                std::string(resolve_dynamic_address(server_manager_.resolve_server_address(ServerType::GameServer, peer_->transport_protocol, game->server_address), peer_->enet_peer->remote_endpoint()->to_string()));
             resp.parameters[DictKeyCodes::LoadBalancing::Token] = peer_->persistent->token;
             if (game->id != game_id)
                 resp.parameters[DictKeyCodes::GameAndActor::GameId] = game->id;
@@ -565,8 +563,7 @@ Awaitable<> MasterServerHandler::HandleOperationRequest(ser::OperationRequestMes
 
             // Payload similar to Create/Join Game
             resp.parameters[DictKeyCodes::LoadBalancing::Address] =
-                resolve_dynamic_address(server_manager_.resolve_server_address(ServerType::GameServer, peer_->transport_protocol, selected_game->server_address),
-                                        peer_->enet_peer->remote_endpoint()->to_string());
+                std::string(resolve_dynamic_address(server_manager_.resolve_server_address(ServerType::GameServer, peer_->transport_protocol, selected_game->server_address), peer_->enet_peer->remote_endpoint()->to_string()));
             resp.parameters[DictKeyCodes::LoadBalancing::Token] = peer_->persistent->token;
             resp.parameters[DictKeyCodes::GameAndActor::GameId] = selected_game->id;
 
