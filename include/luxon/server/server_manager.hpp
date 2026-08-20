@@ -73,6 +73,9 @@ struct ServerConfig {
     std::vector<ProxyConfig> proxies;
 };
 
+std::string get_local_ip_for_client(const std::string& target_ip);
+std::string resolve_dynamic_address(std::string_view configured_address, std::string_view client_endpoint);
+
 #ifdef LUXON_SERVER_ENABLE_WEBSERVER
 struct HttpServerConfig {
     bool enabled = false;
