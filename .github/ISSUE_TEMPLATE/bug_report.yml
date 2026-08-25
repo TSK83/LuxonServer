@@ -29,7 +29,7 @@ body:
       label: Version
       description: Which server version are you experiencing this issue with? Type in `master` if your build is the latest build from the CI pipeline, or the output of `git rev-parse HEAD` (the commit hash) if you are building the server yourself.
     validations:
-      required: false
+      required: true
 
   - type: textarea
     id: description
