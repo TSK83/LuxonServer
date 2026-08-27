@@ -3,6 +3,14 @@
 Luxon Server is a clean-room implementation of the Photon Realtime server. It is built on top of the Luxon project, which provides the necessary reimplementation of the ENet protocol and Photon's binary serialization format.
 The goal of this project is to be a drop-in replacement for the official server for multiplayer games that utilize Photon. It aims to support games out of the box, provided they do not rely on complex server-side plugins, though a plugin system is available if needed.
 
+---
+
+[![Fluxer Community](https://img.shields.io/badge/Fluxer-Join%20Community-9DDD00?style=for-the-badge&labelColor=00264D)](https://fluxer.gg/KpAG6370)
+[![Discord Community](https://img.shields.io/discord/1542589053696872620?style=for-the-badge&logo=discord&logoColor=9DDD00&label=Discord&labelColor=00264D&color=9DDD00)](https://discord.gg/GZhDjDHN5)
+
+**Both communities are bridged with each other**
+
+
 ## Table of Contents
 - [Legal Disclaimer and Legal Contributing Requirements](#legal-disclaimer)
 - [Getting Started](#getting-started)
@@ -11,11 +19,6 @@ The goal of this project is to be a drop-in replacement for the official server 
 - [Platform Support](#platform-support)
 - [Foreign Function Interface (FFI)](#foreign-function-interface-ffi)
 - [FAQ](#faq)
-
-[![Fluxer Community](https://img.shields.io/badge/Fluxer-Join%20Community-9DDD00?style=for-the-badge&labelColor=00264D)](https://fluxer.gg/KpAG6370)
-[![Discord Community](https://img.shields.io/discord/1542589053696872620?style=for-the-badge&logo=discord&logoColor=9DDD00&label=Discord&labelColor=00264D&color=9DDD00)](https://discord.gg/GZhDjDHN5)
-
-(Both communities are bridged with each other)
 
 ---
 ---
