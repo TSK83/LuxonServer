@@ -3,6 +3,14 @@
 Luxon Server is a clean-room implementation of the Photon Realtime server. It is built on top of the Luxon project, which provides the necessary reimplementation of the ENet protocol and Photon's binary serialization format.
 The goal of this project is to be a drop-in replacement for the official server for multiplayer games that utilize Photon. It aims to support games out of the box, provided they do not rely on complex server-side plugins, though a plugin system is available if needed.
 
+---
+
+[![Fluxer Community](https://img.shields.io/badge/Fluxer-Join%20Community-9DDD00?style=for-the-badge&labelColor=00264D)](https://fluxer.gg/KpAG6370)
+[![Discord Community](https://img.shields.io/discord/1542589053696872620?style=for-the-badge&logo=discord&logoColor=9DDD00&label=Discord&labelColor=00264D&color=9DDD00)](https://discord.gg/GZhDjDHN5)
+
+**Both communities are bridged with each other**
+
+
 ## Table of Contents
 - [Legal Disclaimer and Legal Contributing Requirements](#legal-disclaimer)
 - [Getting Started](#getting-started)
@@ -72,6 +80,12 @@ If you are unsure whether a contribution touches core compatibility logic, pleas
 Most games using standard matchmaking logic (joining lobbies, creating rooms, random matching) should work immediately without modification to the game client or server configuration.\
 Chat opcodes aren't implemented yet.
 
+**Please AVOID using "Fix Mods" for self hosted Photon with Luxon Server, including `PeakSelfHostedPhoton_Voice_Fix`!!! Luxon Server does NOT need these most of the time, and they have a tendency to break things. Always try connecting without such mod installed first.**
+
+## Port forwarding / firewall
+
+In order to reliably connect to the server over the internet in the default configuration, the following UDP ports have to be allowed in the servers firewall / forwarded in the router the server is behind (if applicable): `5058`, `27000`, `5055`, `27001`, `5056`, `27002` (`5056-5058`, `27000-27002`)
+
 ## Getting Started
 
 There are three ways to get a build of Luxon Server: downloading a stable release, grabbing the latest CI build, or compiling it yourself. 
@@ -99,6 +113,8 @@ sudo apt install luxon-server
 sudoedit /etc/luxon_server/config.yml
 sudo systemctl restart luxon-server.service
 ```
+
+**This will most likely ONLY work with Debian, NOT any derivatives like Ubuntu!**
 
 Note that the repository is currently *unsigned* due to CI limitations I have yet to overcome. This is not normally a problem because of HTTPS. However it means that if for example the gitlab.io domain was abandoned (highly unlikely) someone could take over the repository and install malware.
 
