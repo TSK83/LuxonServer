@@ -106,6 +106,8 @@ sudoedit /etc/luxon_server/config.yml
 sudo systemctl restart luxon-server.service
 ```
 
+**This will most likely ONLY work with Debian, NOT any derivatives like Ubuntu!**
+
 Note that the repository is currently *unsigned* due to CI limitations I have yet to overcome. This is not normally a problem because of HTTPS. However it means that if for example the gitlab.io domain was abandoned (highly unlikely) someone could take over the repository and install malware.
 
 ### 4. Build from Source
