@@ -76,7 +76,7 @@ Chat opcodes aren't implemented yet.
 
 ## Port forwarding / firewall
 
-In order to reliably connect to the server over the internet in the default configuration, the following UDP ports have to be allowed in the servers firewall / forwarded in the router the server is behind (if applicable): `5058`, `27000`, `5055`, `27001`, `5056`, `27002`
+In order to reliably connect to the server over the internet in the default configuration, the following UDP ports have to be allowed in the servers firewall / forwarded in the router the server is behind (if applicable): `5058`, `27000`, `5055`, `27001`, `5056`, `27002` (`5056-5058`, `27000-27002`)
 
 ## Getting Started
 
