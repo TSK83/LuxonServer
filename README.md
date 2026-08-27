@@ -74,6 +74,10 @@ Chat opcodes aren't implemented yet.
 
 **Please AVOID using "Fix Mods" for self hosted Photon with Luxon Server, including `PeakSelfHostedPhoton_Voice_Fix`!!! Luxon Server does NOT need these most of the time, and they have a tendency to break things. Always try connecting without such mod installed first.**
 
+## Port forwarding / firewall
+
+In order to reliably connect to the server over the internet in the default configuration, the following UDP ports have to be allowed in the servers firewall / forwarded in the router the server is behind (if applicable): `5058`, `27000`, `5055`, `27001`, `5056`, `27002`
+
 ## Getting Started
 
 There are three ways to get a build of Luxon Server: downloading a stable release, grabbing the latest CI build, or compiling it yourself. 
